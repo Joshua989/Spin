@@ -21,18 +21,23 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final lookbackController = TextEditingController();
-  final startHighlightController = TextEditingController();
-  final lookbackKey = GlobalKey<FormState>();
-  final startHighlightKey = GlobalKey<FormState>();
+  final lookbackShortTermController = TextEditingController();
+  final lookbackLongTermController = TextEditingController();
+  final startHighlightShortTermController = TextEditingController();
+  final startHighlightLongTermController = TextEditingController();
+  final lookbackShortTermKey = GlobalKey<FormState>();
+  final lookbackLongTermKey = GlobalKey<FormState>();
+  final startHighlightShortTermKey = GlobalKey<FormState>();
+  final startHighlightLongTermKey = GlobalKey<FormState>();
 
   List<String> previousReports = [];
 
   @override
   void initState() {
-    lookbackController.text = widget.currentState.spinsToLookBack.toString();
-    startHighlightController.text =
-        widget.currentState.startHighlightAt.toString();
+    lookbackShortTermController.text = widget.currentState.spinsToLookBackShortTerm.toString();
+    lookbackLongTermController.text = widget.currentState.spinsToLookBackLongTerm.toString();
+    startHighlightShortTermController.text = widget.currentState.startHighlightAtShortTerm.toString();
+    startHighlightLongTermController.text = widget.currentState.startHighlightAtLongTerm.toString();
     getPreviousReports();
     super.initState();
   }
@@ -159,7 +164,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final reportString = jsonEncode(export.toJson());
         final blob = html.Blob([reportString], 'application/json');
         final url = html.Url.createObjectUrlFromBlob(blob);
-        html.AnchorElement(href: url)
+        final anchor = html.AnchorElement(href: url)
           ..setAttribute("download", "$name.json")
           ..click();
         html.Url.revokeObjectUrl(url);
@@ -231,52 +236,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: ListView(
             children: [
               const SizedBox(height: 12.0),
-              Row(
-                children: [
-                  CupertinoSwitch(
-                    value: state.isAbove,
-                    activeColor: Colors.red,
-                    onChanged: (v) {
-                      context.read<SpinCubit>().toggleIsAbove();
-                    },
-                  ),
-                  const SizedBox(width: 4.0),
-                  const Text("Highlight above"),
-                ],
-              ),
-              const SizedBox(height: 12.0),
-              /// Dropdown to switch between SpinType
-              const Text("Select Type"),
-              DropdownButton<SpinType>(
-                value: state.spinType,
-                hint: const Text("Select Type"),
-                onChanged: (v) {
-                  if (v != null) {
-                    context.read<SpinCubit>().setSpinType(v);
-                  }
-                },
-                items: SpinType.values
-                    .map(
-                      (e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e.toString().split('.').last),
-                      ),
-                    )
-                    .toList(),
-              ),
-
+              const Text("Short-Term Settings", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12.0),
               Form(
-                key: lookbackKey,
+                key: lookbackShortTermKey,
                 child: TextFormField(
-                  controller: lookbackController,
+                  controller: lookbackShortTermController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                    labelText: "Spins to look back",
+                    labelText: "Short-Term Spins to look back",
                   ),
                   onChanged: (v) {
-                    if (lookbackKey.currentState!.validate()) {
-                      context.read<SpinCubit>().setSpinsToLookBack(
+                    if (lookbackShortTermKey.currentState!.validate()) {
+                      context.read<SpinCubit>().setSpinsToLookBackShortTerm(
                             int.parse(v),
                           );
                     }
@@ -289,24 +261,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (int.tryParse(value) == null) {
                       return 'Please enter a valid number';
                     }
-
                     return null;
                   },
                 ),
               ),
               const SizedBox(height: 12.0),
               Form(
-                key: startHighlightKey,
+                key: startHighlightShortTermKey,
                 child: TextFormField(
-                  controller: startHighlightController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  controller: startHighlightShortTermController,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
-                    labelText: "Start highlighting at",
+                    labelText: "Start highlighting short-term at",
                   ),
                   onChanged: (v) {
-                    if (startHighlightKey.currentState!.validate()) {
-                      context.read<SpinCubit>().setStartHighlightAt(
+                    if (startHighlightShortTermKey.currentState!.validate()) {
+                      context.read<SpinCubit>().setStartHighlightAtShortTerm(
                             double.parse(v),
                           );
                     }
@@ -322,10 +292,100 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (double.parse(value) > 1 || double.parse(value) < 0) {
                       return 'Please enter a value between 0 and 1';
                     }
-
                     return null;
                   },
                 ),
+              ),
+              const SizedBox(height: 12.0),
+              Row(
+                children: [
+                  CupertinoSwitch(
+                    value: state.isAboveShortTerm,
+                    activeColor: Colors.red,
+                    onChanged: (v) {
+                      context.read<SpinCubit>().toggleIsAboveShortTerm();
+                    },
+                  ),
+                  const SizedBox(width: 4.0),
+                  const Text("Highlight short-term above"),
+                ],
+              ),
+              const SizedBox(height: 12.0),
+              const Divider(),
+              const SizedBox(height: 12.0),
+              const Text("Long-Term Settings", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12.0),
+              Form(
+                key: lookbackLongTermKey,
+                child: TextFormField(
+                  controller: lookbackLongTermController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Long-Term Spins to look back",
+                  ),
+                  onChanged: (v) {
+                    if (lookbackLongTermKey.currentState!.validate()) {
+                      context.read<SpinCubit>().setSpinsToLookBackLongTerm(
+                            int.parse(v),
+                          );
+                    }
+                    setState(() {});
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a value';
+                    }
+                    if (int.tryParse(value) == null) {
+                      return 'Please enter a valid number';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(height: 12.0),
+              Form(
+                key: startHighlightLongTermKey,
+                child: TextFormField(
+                  controller: startHighlightLongTermController,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: "Start highlighting long-term at",
+                  ),
+                  onChanged: (v) {
+                    if (startHighlightLongTermKey.currentState!.validate()) {
+                      context.read<SpinCubit>().setStartHighlightAtLongTerm(
+                            double.parse(v),
+                          );
+                    }
+                    setState(() {});
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a value';
+                    }
+                    if (double.tryParse(value) == null) {
+                      return 'Please enter a valid number';
+                    }
+                    if (double.parse(value) > 1 || double.parse(value) < 0) {
+                      return 'Please enter a value between 0 and 1';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(height: 12.0),
+              Row(
+                children: [
+                  CupertinoSwitch(
+                    value: state.isAboveLongTerm,
+                    activeColor: Colors.red,
+                    onChanged: (v) {
+                      context.read<SpinCubit>().toggleIsAboveLongTerm();
+                    },
+                  ),
+                  const SizedBox(width: 4.0),
+                  const Text("Highlight long-term above"),
+                ],
               ),
               const SizedBox(height: 12.0),
               TextButton(
